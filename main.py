@@ -6,33 +6,52 @@ def fetch_pokemon(name):
     data = response.json()
     return data
 
-def main():
-    input_name = input('Enter pokemon name: ').lower().strip().replace(" ", "-")
-    data = fetch_pokemon(input_name)
+def normalize_name(raw_name):
+    return raw_name.lower().strip().replace(" ", "-")
 
+def extract_pokemon_info(data):
     pokemon_id = data["id"]
-    name = data["name"].capitalize()
+    pokemon_name = data["name"]
     height = data["height"]/10
     weight = data["weight"]/10
 
     type_list = []
     for type_entry in data["types"]:
         type_list.append(type_entry["type"]["name"])
-    types = ", ".join(type_list)
 
-    print(f'Searching for: '
-          f'{input_name}\n'
-          f'Id: {pokemon_id}\n'
-          f'Name: {name}\n'
-          f'Height: {height}m\n'
-          f'Weight: {weight}kg\n'
-          f'Type(s): {types}\n'
-          f'Stats:')
-
+    stat_dict = {}
     for stat in data["stats"]:
-        stat_name = stat["stat"]["name"].capitalize().replace("-", " ")
+        stat_name = stat["stat"]["name"]
         stat_value = stat["base_stat"]
-        print(f'\t{stat_name}: {stat_value}')
+        stat_dict[stat_name] = stat_value
+
+    return {
+        "id": pokemon_id,
+        "name": pokemon_name,
+        "height": height,
+        "weight": weight,
+        "types": type_list,
+        "stats": stat_dict
+    }
+
+def display_pokemon(pokemon):
+    types = ", ".join(pokemon["types"])
+    print(f'Id: {pokemon["id"]}\n'
+          f'Name: {pokemon["name"].capitalize()}\n'
+          f'Height: {pokemon["height"]}m\n'
+          f'Weight: {pokemon["weight"]}kg\n'
+          f'Types: {types}\n'
+          f'Stats:')
+    for name, value in pokemon["stats"].items():
+        print(f'\t{name.capitalize().replace("-", " ")}: {value}')
+
+def main():
+    input_name = normalize_name(input("Enter pokemon name: "))
+    data = fetch_pokemon(input_name)
+    info = extract_pokemon_info(data)
+
+    print(f'Searching for: {input_name}')
+    display_pokemon(info)
 
 if __name__ == "__main__":
     main()

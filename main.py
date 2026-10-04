@@ -1,9 +1,18 @@
 import requests
 
 def fetch_pokemon(name):
+    if name == "":
+        raise ValueError("Pokemon name cannot be empty")
     url = 'https://pokeapi.co/api/v2/pokemon/'
-    response = requests.get(f'{url}{name}')
+
+    response = requests.get(f'{url}{name}',timeout=5)
+    if response.status_code == 404:
+        raise ValueError("Pokemon not found")
+    response.raise_for_status()
+
     data = response.json()
+    if "id" not in data:
+        raise ValueError("Invalid Pokemon.")
     return data
 
 def normalize_name(raw_name):
@@ -46,11 +55,17 @@ def display_pokemon(pokemon):
         print(f'\t{name.capitalize().replace("-", " ")}: {value}')
 
 def main():
-    input_name = normalize_name(input("Enter pokemon name: "))
-    data = fetch_pokemon(input_name)
-    info = extract_pokemon_info(data)
+    normalized_name = normalize_name(input("Enter pokemon name: "))
+    try:
+        data = fetch_pokemon(normalized_name)
+    except ValueError as e:
+        print(e)
+        return
+    except requests.exceptions.RequestException as e:
+        print(f'Could not reach the PokéAPI, check your connection and try again ({e})')
+        return
 
-    print(f'Searching for: {input_name}')
+    info = extract_pokemon_info(data)
     display_pokemon(info)
 
 if __name__ == "__main__":

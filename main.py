@@ -1,4 +1,5 @@
 import requests
+import re
 
 def fetch_pokemon(name):
     if name == "":
@@ -16,7 +17,7 @@ def fetch_pokemon(name):
     return data
 
 def normalize_name(raw_name):
-    return raw_name.lower().strip().replace(" ", "-")
+    return re.sub(' +', '-', raw_name.lower().strip())
 
 def extract_pokemon_info(data):
     pokemon_id = data["id"]
